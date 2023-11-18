@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '@mui/material/Button';
+import { Link } from 'react-router-dom';
 
 import styles from './Header.module.scss';
 import Container from '@mui/material/Container';
@@ -13,25 +14,25 @@ export const Header = () => {
     <div className={styles.root}>
       <Container maxWidth="lg">
         <div className={styles.inner}>
-          <a className={styles.logo} href="/">
+          <Link className={styles.logo} to="/">
             <div>MERN BLOG</div>
-          </a>
+          </Link>
           <div className={styles.buttons}>
             {isAuth ? (
               <>
-                <a href="/posts/create">
+                <Link to="/add-post">
                   <Button variant="contained">Create post</Button>
-                </a>
+                </Link>
                 <Button onClick={onClickLogout} variant="contained" color="error">Logout</Button>
               </>
             ) : (
               <>
-                <a href="/login">
+                <Link to="/login">
                   <Button variant="outlined">Login</Button>
-                </a>
-                <a href="/register">
+                </Link>
+                <Link to="/register">
                   <Button variant="contained">Registration</Button>
-                </a>
+                </Link>
               </>
             )}
           </div>
