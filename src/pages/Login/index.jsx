@@ -52,7 +52,7 @@ export const Login = () => {
           className={styles.field}
           label="E-Mail"
           error={errors.email ? true : false}
-          helperText={errors.email && errors.email.message}
+          helperText={errors.email?.message}
           {...register('email', {required: 'Email is required.'})}
           fullWidth
         />
@@ -60,7 +60,7 @@ export const Login = () => {
           className={styles.field} 
           label="Password"
           error={errors.password ? true : false}
-          helperText={errors.password && errors.password.message}
+          helperText={errors.password?.message}
           {...register('password', {required: 'Password is required.'})}
           fullWidth 
         />
