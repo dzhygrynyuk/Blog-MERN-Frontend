@@ -1,28 +1,68 @@
 import React from 'react';
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import SimpleMDE from 'react-simplemde-editor';
 
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
-import SimpleMDE from 'react-simplemde-editor';
 
+import axios from '../../axios';
 import { checkIsAuth } from "../../redux/slices/auth";
 import 'easymde/dist/easymde.min.css';
 import styles from './AddPost.module.scss';
 
 export const AddPost = () => {
+  const navigate = useNavigate();
   const isAuth = useSelector(checkIsAuth);
-  const imageUrl = '';
-  const [value, setValue] = React.useState('');
+  const [title, setTitle] = React.useState('');
+  const [tags, setTags] = React.useState('');
+  const [text, setText] = React.useState('');
+  const [imageUrl, setImageUrl] = React.useState('');
+  const imputFileRef = React.useRef(null);
 
-  const handleChangeFile = () => {};
+  const handleChangeFile = async (event) => {
+    try {
+      const formData = new FormData();
+      const file = event.target.files[0];
+      formData.append('image', file);
+      const { data } = await axios.post('/upload', formData);
+      setImageUrl(data.url);
+    } catch (error) {
+      console.warn(error);
+      alert('Failed to upload file!');
+    }
+  };
 
-  const onClickRemoveImage = () => {};
+  const onClickRemoveImage = () => {
+    setImageUrl('');
+  };
 
   const onChange = React.useCallback((value) => {
-    setValue(value);
+    setText(value);
   }, []);
+
+  const onSubmit = async () => {
+    try {
+      const fields = {
+        title,
+        text, 
+        tags: tags.split(','),
+        imageUrl
+      };
+
+      console.log('fields', fields);
+
+      const { data } = await axios.post('/posts', fields);
+      const id = data._id;
+
+      navigate(`/posts/${id}`);
+    } catch (error) {
+      console.warn(error);
+      alert('Failed to create post!');
+    }
+  };
 
   const options = React.useMemo(
     () => ({
@@ -45,13 +85,13 @@ export const AddPost = () => {
 
   return (
     <Paper style={{ padding: 30 }}>
-      <Button variant="outlined" size="large">Upload preview</Button>
-      <input type="file" onChange={handleChangeFile} hidden />
+      <Button onClick={() => imputFileRef.current.click()} variant="outlined" size="large">Upload preview</Button>
+      <input ref={imputFileRef} type="file" onChange={handleChangeFile} hidden />
       {imageUrl && (
-        <Button variant="contained" color="error" onClick={onClickRemoveImage}>Detele</Button>
-      )}
-      {imageUrl && (
-        <img className={styles.image} src={`http://localhost:4444${imageUrl}`} alt="Uploaded" />
+        <>
+          <Button variant="contained" color="error" onClick={onClickRemoveImage}>Detele</Button>
+          <img className={styles.image} src={`http://localhost:5000${imageUrl}`} alt="Uploaded" />
+        </>
       )}
       <br />
       <br />
@@ -59,12 +99,21 @@ export const AddPost = () => {
         classes={{ root: styles.title }}
         variant="standard"
         placeholder="Post title..."
+        value={title}
+        onChange={e => setTitle(e.target.value)}
         fullWidth
       />
-      <TextField classes={{ root: styles.tags }} variant="standard" placeholder="Tags" fullWidth />
-      <SimpleMDE className={styles.editor} value={value} onChange={onChange} options={options} />
+      <TextField 
+        classes={{ root: styles.tags }} 
+        variant="standard" 
+        placeholder="Tags"
+        value={tags}
+        onChange={e => setTags(e.target.value)}
+        fullWidth 
+      />
+      <SimpleMDE className={styles.editor} value={text} onChange={onChange} options={options} />
       <div className={styles.buttons}>
-        <Button size="large" variant="contained">Publish</Button>
+        <Button onClick={onSubmit} size="large" variant="contained">Publish</Button>
         <a href="/">
           <Button size="large">Cancel</Button>
         </a>
