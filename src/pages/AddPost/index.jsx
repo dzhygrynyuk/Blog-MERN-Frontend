@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import SimpleMDE from 'react-simplemde-editor';
 
 import TextField from '@mui/material/TextField';
@@ -15,12 +15,25 @@ import styles from './AddPost.module.scss';
 
 export const AddPost = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const isAuth = useSelector(checkIsAuth);
   const [title, setTitle] = React.useState('');
   const [tags, setTags] = React.useState('');
   const [text, setText] = React.useState('');
   const [imageUrl, setImageUrl] = React.useState('');
   const imputFileRef = React.useRef(null);
+  const isEditing = Boolean(id);
+
+  React.useEffect(() => {
+    if(isEditing){
+      axios.get(`/posts/${id}`).then(( { data } ) => {
+        setTitle(data.title);
+        setTags(data.tags.join());
+        setText(data.text);
+        setImageUrl(data.imageUrl);
+      });
+    }
+  }, []);
 
   const handleChangeFile = async (event) => {
     try {
@@ -52,12 +65,12 @@ export const AddPost = () => {
         imageUrl
       };
 
-      console.log('fields', fields);
+      const { data } = isEditing 
+        ? await axios.patch(`/posts/${id}`, fields) 
+        : await axios.post('/posts', fields);
 
-      const { data } = await axios.post('/posts', fields);
-      const id = data._id;
-
-      navigate(`/posts/${id}`);
+      const postId = isEditing ? id : data._id;
+      navigate(`/posts/${postId}`);
     } catch (error) {
       console.warn(error);
       alert('Failed to create post!');
@@ -113,7 +126,7 @@ export const AddPost = () => {
       />
       <SimpleMDE className={styles.editor} value={text} onChange={onChange} options={options} />
       <div className={styles.buttons}>
-        <Button onClick={onSubmit} size="large" variant="contained">Publish</Button>
+        <Button onClick={onSubmit} size="large" variant="contained">{isEditing ? 'Update' : 'Publish'}</Button>
         <a href="/">
           <Button size="large">Cancel</Button>
         </a>
